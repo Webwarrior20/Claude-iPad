@@ -9,6 +9,16 @@ All personal data lives in its private database collection `data/users/me`
 (read and write it with the `ArtifactData` tool). Never write personal data
 into the git repository, and never commit or push anything during a run.
 
+## Models (to save the owner's usage allowance)
+- This session (the run itself, and **strong** matches' letters and written answers): the
+  session's own model (medium).
+- **Scoring** all candidates, and **good** matches' letters and written answers: delegate to
+  a subagent with the `Agent` tool and `model: "haiku"`. Give it the file paths it needs
+  (candidates file, `prompts/score.md` or `prompts/letter.md`, the resume text you saved to
+  `$W/resumes.json`, the posting) and ask for JSON or plain text back. Batch: one
+  subagent call for all scoring; one call per good match for its letter + answers.
+- **Weak** matches: no letter, no form work.
+
 ## Hard rules
 - Submit only when: the job scores **strong**, location tier is 1–3, there are no doubts,
   every required field has an answer from the profile or the resume, the
@@ -45,7 +55,7 @@ environment to turn on automatic sending").
   `["resumes/Vedant_Prajapati_Resume_SoftwareDeveloper.pdf","resumes/Vedant_Prajapati_Resume_WebDeveloper.pdf","resumes/Vedant_Prajapati_Resume_DataAnalyst.pdf"]`
   and note where each was saved. Resume keys: software, web, data.
 - Resume text for scoring and letters: the Apply Kit page embeds it as `RESUME_TEXT`;
-  `Artifact read` the page once and take it from there.
+  `Artifact read` the page once and save that object to `$W/resumes.json`.
 
 ## 2. Send what the owner approved
 For each job doc with `status:"approved"`: go to step 5 with that job, using its stored
@@ -60,7 +70,9 @@ node autoapply/discover.js $W/seen.json $W/candidates.json 21
 If the output shows fewer than 47 boards answering, mention it in the summary.
 
 ## 4. Score each candidate
-Read `prompts/score.md` and apply it to every candidate in `$W/candidates.json`.
+Send one `haiku` subagent `prompts/score.md`, `$W/resumes.json` and `$W/candidates.json`;
+it returns a JSON array with one entry per candidate `key`. Sanity-check the result
+yourself: anything it calls strong must clearly be entry-level and in tiers 1–3.
 Result per job: resume, match (strong/good/weak), tier (1–4), reason, doubts.
 - **weak** → job doc with `status:"skipped"` (keep it short: no letter).
 - **good**, or **strong** with doubts or tier 4 → prepare (step 5 without `--submit`)
@@ -71,7 +83,8 @@ Result per job: resume, match (strong/good/weak), tier (1–4), reason, doubts.
 ## 5. Prepare and (maybe) submit one job
 1. `node autoapply/inspect.js <url> $W/<id>-fields.json` lists every field.
    If the page has no form fields, or it needs a login/account → `apply-yourself`.
-2. Write the cover letter following `prompts/letter.md` → `$W/<id>-letter.txt`, then
+2. Write the cover letter following `prompts/letter.md` → `$W/<id>-letter.txt`
+   (strong: write it yourself; good: from the `haiku` subagent), then
    `node autoapply/letter.js $W/<id>-letter.txt $W/profile.json "<Company>" $W/<id>-letter.pdf`.
 3. Write `$W/<id>-answers.json` for **every** field (format in `fill.js`):
    - identity/contact/links/location/education/current job → from `profile.json`;
@@ -86,7 +99,8 @@ Result per job: resume, match (strong/good/weak), tier (1–4), reason, doubts.
      future-opportunity opt-ins → Yes.
    - "How did you hear" → company website / careers page option.
    - short written questions ("why us", "what sets you apart", "anything else") →
-     2–4 sentences from the resume and the posting, same rules as the letter.
+     2–4 sentences from the resume and the posting, same rules as the letter
+     (strong: yourself; good: the same `haiku` subagent that wrote its letter).
    - anything you can't answer truthfully from the profile or resume (e.g. "Do you
      have a driver's licence?", "Are you willing to work weekends?", security
      clearance, a specific certification) → look in `profile.extraAnswers`; if absent,
