@@ -1,0 +1,6 @@
+{
+  "_note": "Public job boards checked every run. Add a company by its board name; probe new ones with probe_boards.js.",
+  "greenhouse": ["clutch","d2l","darkhorseemergency","faire","flipp","geotab","gitlab","hootsuite","netlify","orennia","questrade","ritual","shakepay","splice","tailscale","vercel"],
+  "lever": ["altaml","d2l","fullscript","mechanicalorchard","plooto","policyme","tracktik","wattpad","waveapps"],
+  "ashby": ["1password","benevity","clearco","cohere","float","hopper","jane","jobber","koho","lightspeedhq","loopio","neofinancial","posthog","procurify","replicant","rewind","solink","sophos","supabase","thinkific","trulioo","wealthsimple"]
+}
