@@ -27,7 +27,9 @@ async function fillOne(page, a) {
       let i = texts.findIndex(t => norm(t) === norm(v)); if (i < 0) i = texts.findIndex(t => norm(t).startsWith(norm(v))); if (i < 0) i = texts.findIndex(t => norm(t).includes(norm(v)));
       if (i < 0) { await page.keyboard.press('Escape'); return 'no-option'; }
       await opts.nth(i).click(); await page.waitForTimeout(300); return 'ok'; }
-    case 'radio': { const ms = page.locator(a.selector);
+    case 'radio': { let ms = page.locator(a.selector);
+      if (!(await ms.count())) { // Ashby prefixes radio group names with a per-page-load id: match on the stable suffix
+        const m = /name="[^"_]+_([^"]+)"/.exec(a.selector); if (m) ms = page.locator(`input[type="radio"][name$="_${m[1]}"]`); }
       for (let i = 0; i < await ms.count(); i++) { const m = ms.nth(i);
         const lab = await m.evaluate(e => ((e.id && document.querySelector(`label[for="${CSS.escape(e.id)}"]`)?.innerText) || e.closest('label')?.innerText || e.value || '').trim());
         if (norm(lab) === norm(v) || norm(lab).startsWith(norm(v))) { await m.check({ force: true }); return 'ok'; } }
